@@ -21,7 +21,7 @@ class PropertyResource extends JsonResource
             'slug' =>  $this->slug,
             'description' => $this->description,
             'price' => $this->price,
-            'image' => $this->image,
+            'images' => $this->images,
             'bedrooms' => $this->bedrooms,
             'toilets' => $this->toilets,
             'parking_lots' => $this->parking_lots,

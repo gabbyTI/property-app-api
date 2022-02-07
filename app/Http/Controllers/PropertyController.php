@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Helpers\ApiResponder;
 use App\Http\Resources\PropertyResource;
+use App\Jobs\UploadImage;
 use App\Models\Property;
 use App\Repositories\Contracts\IProperty;
 use App\Repositories\Eloquent\Criteria\ForUser;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PropertyController extends Controller
@@ -23,6 +25,7 @@ class PropertyController extends Controller
         $request->validate([
             'title' => ['required', 'string', 'unique:properties'],
             'description' => ['required', 'string'],
+            'image' => ['required', 'mimes:png,jpeg,gif,bmp', 'max:2048'],
             'price' => ['required', 'integer'],
             'bedrooms' => ['required', 'integer'],
             'toilets' => ['required', 'integer'],
@@ -32,15 +35,21 @@ class PropertyController extends Controller
             'is_active' => ['boolean'],
         ]);
 
-        // dd(Str::slug($request->title));
+        $image = $request->file('image');
 
-        //TODO: Use Eloquent create instead
+        // get original file name and replace any spaces with _
+        // example: ofiice card.png = timestamp()_office_card.pnp
+        $filename = time() . "_" . preg_replace('/\s+/', '_', strtolower($image->getClientOriginalName()));
+
+        // move image to temp location (tmp disk)
+        $tmp = $image->storeAs('uploads/original', $filename, 'tmp');
 
         $newProperty = Property::create([
             'user_id' => 1,
             'title' => $request->title,
             'slug' =>  Str::slug($request->title),
             'description' => $request->description,
+            'image' => $filename,
             'price' => $request->price,
             'bedrooms' => $request->bedrooms,
             'toilets' => $request->toilets,
@@ -48,9 +57,10 @@ class PropertyController extends Controller
             'location' => $request->location,
             'term_duration' => $request->term_duration
         ]);
-        // $newProperty = $this->properties->create([
 
-        // ]);
+        //dispacth job to handle image manipulation
+        $this->dispatch(new UploadImage($newProperty));
+
 
         return response()->json(
             [
@@ -108,6 +118,13 @@ class PropertyController extends Controller
     {
         //TODO: Add delete policy
 
+        // Delete all images associated to the property
+        foreach (['thumbnail', 'large', 'original'] as $size) {
+            //check if file exist
+            if (Storage::disk($property->disk)->exists("uploads/properties/{$size}/" . $property->image)) {
+                Storage::disk($property->disk)->delete("uploads/properties/{$size}/" . $property->image);
+            }
+        }
         //TODO: Use Eloquent delete instead
 
         $this->properties->delete($property->id);
