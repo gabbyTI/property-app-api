@@ -93,7 +93,11 @@ class Handler extends ExceptionHandler
         $errors = [];
 
         foreach ($exception->errors() as $field => $message) {
-            $errors[] = $message[0];
+            $errors[] = [
+                $field => [
+                    $message[0]
+                ]
+            ];
         }
 
         return $errors;
