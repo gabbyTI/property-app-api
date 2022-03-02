@@ -43,6 +43,6 @@ class Property extends Model
 
     public function getImagePath($size)
     {
-        return Storage::disk($this->disk)->url("uploads/products/{$size}/" . $this->image);
+        return Storage::disk($this->disk)->url("uploads/properties/{$size}/" . $this->image);
     }
 }
