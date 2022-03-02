@@ -39,6 +39,7 @@ class UploadImage implements ShouldQueue
         Log::info("Disk: " . $disk);
         $imageName = $this->property->image;
         $original_file = storage_path() . '/uploads/original/' . $imageName;
+        print('INSIDE JOB');
 
         try {
             // create the large Image and save to tmp disk

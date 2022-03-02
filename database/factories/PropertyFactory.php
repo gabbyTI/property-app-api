@@ -25,6 +25,7 @@ class PropertyFactory extends Factory
             'toilets' => $this->faker->numberBetween(1, 3),
             'parking_lots' => $this->faker->numberBetween(1, 2),
             'location' => $this->faker->address(),
+            'image' => $this->faker->word(),
             'term_duration' => $this->faker->numberBetween(2, 12) . ' months',
             'is_active' => $this->faker->boolean(),
         ];

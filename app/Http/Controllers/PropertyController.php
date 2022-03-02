@@ -45,7 +45,7 @@ class PropertyController extends Controller
         $tmp = $image->storeAs('uploads/original', $filename, 'tmp');
 
         $newProperty = Property::create([
-            'user_id' => 1,
+            'user_id' => auth()->id(),
             'title' => $request->title,
             'slug' =>  Str::slug($request->title),
             'description' => $request->description,
@@ -57,7 +57,7 @@ class PropertyController extends Controller
             'location' => $request->location,
             'term_duration' => $request->term_duration
         ]);
-
+        print('ABOUT TO DISPATCH JOB');
         //dispacth job to handle image manipulation
         $this->dispatch(new UploadImage($newProperty));
 
@@ -95,6 +95,8 @@ class PropertyController extends Controller
     public function updateProperty(Request $request, Property $property)
     {
         //TODO: Add update policy
+        $this->authorize('update', $property);
+
         $request->validate([
             'title' => ['string', 'unique:properties,title,' . $property->id],
             'description' => ['string'],
@@ -117,7 +119,7 @@ class PropertyController extends Controller
     public function deleteProperty(Property $property)
     {
         //TODO: Add delete policy
-
+        $this->authorize('delete', $property);
         // Delete all images associated to the property
         foreach (['thumbnail', 'large', 'original'] as $size) {
             //check if file exist
